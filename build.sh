@@ -2,14 +2,14 @@
 
 set -e
 
-VERSION="6.4.8"
-AVERSION="arch1"
-REV="1"
-KVERSION="$VERSION-$AVERSION-$REV"
-NO_REV_KVERSION="$VERSION-$AVERSION"
-CONFIG_VERSION="$VERSION.$AVERSION-$REV"
+VERSION="6.4.9"
+KREV="arch1"
+CREV="1"
+KVERSION="$VERSION-$KREV-$CREV"
+NO_REV_KVERSION="$VERSION-$KREV"
+CONFIG_VERSION="$VERSION.$KREV-$CREV"
 
-REMOTE_KERNEL="https://github.com/archlinux/linux/archive/refs/tags/$NO_REV_KVERSION.tar.gz"
+REMOTE_KERNEL="https://github.com/archlinux/linux/archive/refs/tags/v$NO_REV_KVERSION.tar.gz"
 REMOTE_CONFIG="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/$CONFIG_VERSION/config"
 
 BROOT="$PWD"
@@ -50,13 +50,36 @@ main () {
 download () {
   cd $BROOT
   
-  infop "Dowloading using curl"
-  
-  curl -L $REMOTE_KERNEL -o kernel-$NO_REV_KVERSION.tar.gz || error "Cannot download kernel : $REMOTE_KERNEL" 1
-  curl -L $REMOTE_CONFIG -o config-$KVERSION || error "Cannot download config : $REMOTE_CONFIG" 1
-  
-  tar xf kernel.tar.gz
+  if ! [ -d v$KVERSION  ];  then
+    mkdir -p v$KVERSION
+    cd v$KVERSION
+    infop "Use archive directory: $BROOT/v$KVERSION"
+
+
+    infop "Dowloading using curl ..."
+
+    curl -L $REMOTE_KERNEL -o kernel-$NO_REV_KVERSION.tar.gz || error "Cannot download kernel : $REMOTE_KERNEL" 1
+    curl -L $REMOTE_CONFIG -o config-$KVERSION || error "Cannot download config : $REMOTE_CONFIG" 1
+    
+    infop "Setting up enviroment ..."
+
+    tar xf kernel-$NO_REV_KVERSION.tar.gz
+    cd ..
+    rm -f linux config
+    ln -s v$KVERSION/linux-$NO_REV_KVERSION linux
+    ln -s v$KVERSION/config-$KVERSION config
+
+    infop "Build env sucessfully setup !"
+  else
+    infop "Version already created, pass"
+  fi
 }
+
+menuconfig () {
+  echo
+
+}
+
 
 
 TARGET=""
