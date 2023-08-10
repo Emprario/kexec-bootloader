@@ -13,7 +13,8 @@ REMOTE_KERNEL="https://github.com/archlinux/linux/archive/refs/tags/v$NO_REV_KVE
 REMOTE_CONFIG="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/$CONFIG_VERSION/config"
 
 BROOT="$PWD"
-TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
+SRC_LINUX=$BROOT/linux
+#TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
 
 
 TARGETs=("standard" "chgconfig" "rescue") 
@@ -45,6 +46,15 @@ main () {
   infop "Building: $TARGET"
   
   download
+  
+  prepare_env
+  
+  if [[ $TARGET == "chgconfig" ]];then
+    menuconfig
+    exit 0
+  fi
+  
+  build
 }
 
 download () {
@@ -75,10 +85,47 @@ download () {
   fi
 }
 
-menuconfig () {
-  echo
-
+prepare_env () {
+  cd $BROOT
+  
+  infop "Prepare build environement"
+  
+  cp config config.appended
+  
+  if ! [ -f overlays/$TARGET/no_overlay.conf ]; then
+    cat overlays/$TARGET/*.conf >> config.appended
+  fi
+  
+  cp config.appended $SRC_LINUX/.config
 }
+
+menuconfig () {
+  cd $SRC_LINUX
+  
+  infop "Change configuration"
+  
+  make menuconfig
+  
+  diff -y --suppress-common-lines $BROOT/config .config > $BROOT/config.diff || echo
+  
+  infop "You can find the diff in $BROOT/config.diff"
+}
+
+build () {
+  cd $SRC_LINUX
+  
+  infop "Building Kernel ..."
+
+  make -j"$(nproc)"
+
+  #Version of kernel
+  KERNEL_STRING=$(file -bL arch/x86/boot/bzImage | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
+  
+  infop "Kernel $KERNEL_STRING sucessfully built !"
+}
+
+
+
 
 
 
