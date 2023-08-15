@@ -146,7 +146,7 @@ mkinit () {
     error "Something went wrong with MKINIT script !" 1
   fi
   
-  cp $BUIB_PATH/initramfs.cpio.xz $SRC_LINUX
+  cp $BUILD_PATH/initramfs.cpio.xz $SRC_LINUX
 }
 
 clean () {
@@ -175,8 +175,9 @@ install_modules() {
 }
 
 post () {
-  export -n $BROOT
-  export -m $BUILD_PATH
+  cp $SRC_LINUX/arch/x86/boot/bzImage $BUILD_PATH
+  export -n BROOT
+  export -n BUILD_PATH
 }
 
 TARGET=""
@@ -214,7 +215,7 @@ fi
 
 if $PRINT_VAR; then
   print_var
-fi
+fi 
 
 if ! main; then
   post

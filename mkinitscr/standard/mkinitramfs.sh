@@ -112,9 +112,9 @@ extract_blobs () {
 install_scripts () {
   cd $INITRAMFS_PATH  
   
-  if [ -d $SRC/scripts.d/ ];then
-    mkdir ./lib/scripts
-    cp $SRC/scripts.d/* ./lib/scripts/
+  if [ -d $SRC/initscr/ ];then
+    mkdir ./lib/initscr
+    cp $SRC/initscr/* ./lib/initscr
   fi
 }
 
@@ -124,18 +124,17 @@ compile_cpio () {
 
   rm -f $CPIO_ARCHIVE
   find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > $CPIO_ARCHIVE
-
 }
 
-ADDMOD=true
+ADDMOD=false
 DEVAPK=false
 DEVMODE=false
 
 for opt in $@
 do
   case $opt in
-    --no-modules)
-      ADDMOD=false
+    --modules)
+      ADDMOD=true
       ;;
     --devapk)
       DEVAPK=true
