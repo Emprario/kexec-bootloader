@@ -30,6 +30,7 @@ usage () {
   echo 
   echo "  -h | --help       Print help"
   echo "  -p | --print-var  Print input variables"
+  echo "  --once            Build the kernel only once (not twice as default)"
   echo 
   #echo "    BVERSION is a variable that is overwritten the default ($BVERSION) if specifed."
   echo "    TARGET [required] is a keyword to specified what you want to build ;"
@@ -62,8 +63,10 @@ main () {
     exit 0
   fi
   
-  build
-  install_modules
+  if ! $ONCE;then
+    build
+    install_modules
+  fi
   mkinit
   build
 }
@@ -182,6 +185,7 @@ post () {
 
 TARGET=""
 PRINT_VAR=false
+ONCE=false
 
 for arg in $@
 do
@@ -191,6 +195,9 @@ do
       ;;
     -p | --print-var)
       PRINT_VAR=true
+      ;;
+    --once)
+      ONCE=true
       ;;
     *)
       for pretend in ${TARGETs[@]}

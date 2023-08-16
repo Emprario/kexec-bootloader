@@ -3,9 +3,8 @@
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 
 if [ -f /etc/devmode ];then
-  export DEVMODE="open"
+  export DEVMODE=true
 fi
-
 
 echo "Mount base fs ..."
 mount -t proc none /proc
@@ -25,7 +24,10 @@ infop "Ready to prepare new root !"
 # Return $INIT $ROOT $MOUNT_OPT
 parse_cmdline
 mount_root
-switch_root /mnt/root $INIT
+if $DEVMODE;then
+  bash
+fi
+exec switch_root /mnt/root $INIT
 
-# Fallback into shell
-bash
+# Fallback to bash
+#/bin/bash

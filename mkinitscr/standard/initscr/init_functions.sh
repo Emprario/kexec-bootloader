@@ -21,7 +21,7 @@ parse_cmdline () {
           "root="*)
             ROOT=${arg:5}
             ;;
-          esac
+        esac
         ;;
       rw)
         IFS=":"
@@ -47,7 +47,7 @@ parse_cmdline () {
         fi
         IFS=" "
         ;;
-      init=*)
+      "init="*)
         INIT="${arg:5}"
         ;;
       esac
@@ -62,8 +62,17 @@ parse_cmdline () {
 
 mount_root () {
   #1. Check Filesystem ...
-  FSTYPE=($(lsblk -r -o NAME,FSTYPE | grep ${ROOT:5}))
-  FSTYPE=${FSTYPE[1]}
+  FSTYPE=""
+  cc=0
+  while [ -z $FSTYPE ] && [ $cc -le 15 ]
+  do
+    FSTYPE=($(lsblk -r -o NAME,FSTYPE | grep ${ROOT:5}))
+    FSTYPE=${FSTYPE[1]}
+    cc=$(($cc + 1))
+    if [ -z $FSTYPE ] && [ $cc -le 15 ];then
+     sleep 1
+    fi
+  done
   
   #2. Resolve encryption
   
@@ -73,9 +82,9 @@ mount_root () {
   
 }
 
-parse_cmdline 
-echo $ROOT
-echo $CMDLINE
-echo ${MOUNT_OPT[*]}
-echo $INIT
-
+#parse_cmdline 
+#ROOT=/dev/sda2
+#echo $CMDLINE
+#echo ${MOUNT_OPT[*]}
+#echo $INIT
+#mount_root
