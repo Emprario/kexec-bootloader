@@ -21,7 +21,7 @@ MODULES_FOLDER=$SRC_LINUX/modules
 #TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
 
 
-TARGETs=("standard" "chgconfig" "rescue" "clean") 
+TARGETs=("kaboot" "chgconfig" "clean") 
 
 source functions.sh
 
@@ -31,6 +31,7 @@ usage () {
   echo "  -h | --help       Print help"
   echo "  -p | --print-var  Print input variables"
   echo "  --once            Build the kernel only once (not twice as default)"
+  echo "  --dev-initramfs   Build the initramfs with dev apks"
   echo 
   #echo "    BVERSION is a variable that is overwritten the default ($BVERSION) if specifed."
   echo "    TARGET [required] is a keyword to specified what you want to build ;"
@@ -144,8 +145,14 @@ mkinit () {
   MKINIT=$BROOT/mkinitscr/$TARGET/mkinitramfs.sh
   
   infop "Building initramfs using : $MKINIT"
+
+  if $DEV_INITRAMFS; then
+    CMDLINE="sudo bash $MKINIT $BROOT $BUILD_PATH --devapk"
+  else
+    CMDLINE="sudo bash $MKINIT $BROOT $BUILD_PATH"
+  fi
   
-  if ! sudo bash $MKINIT $BROOT $BUILD_PATH; then
+  if ! $CMDLINE; then
     error "Something went wrong with MKINIT script !" 1
   fi
   
@@ -186,6 +193,7 @@ post () {
 TARGET=""
 PRINT_VAR=false
 ONCE=false
+DEV_INITRAMFS=false
 
 for arg in $@
 do
@@ -198,6 +206,9 @@ do
       ;;
     --once)
       ONCE=true
+      ;;
+    --dev-initramfs)
+      DEV_INITRAMFS=true
       ;;
     *)
       for pretend in ${TARGETs[@]}
