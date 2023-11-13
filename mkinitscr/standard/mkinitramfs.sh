@@ -16,7 +16,7 @@ ALP_UNUSED_APK="ca-certificates alpine-keys apk-tools"
 ALP_USEFUL_APK="bash util-linux linux-firmware-amdgpu"
 #ALP_EDGETE_APK=""
 ALP_DEVELP_APK="vim nano tree"
-ALP_COMDEV_APK="vboot-utils cgpt"
+ALP_COMDEV_APK="vboot-utils cgpt kexec-tools"
 PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 
 CHROOT="chroot $INITRAMFS_PATH"
@@ -39,11 +39,12 @@ clean () {
 basic_root () {
   cd $INITRAMFS_PATH
   
-  mkdir --parents ./{usr,bin,dev,etc,lib,mnt/root,proc,root,sbin,sys,tmp}
+  mkdir --parents ./{usr,bin,dev,etc,lib,mnt,proc,root,sbin,sys,tmp}
   mknod -m 622 dev/console c 5 1
   mknod -m 622 dev/tty0 c 4 1
   mknod -m 622 dev/ttyS0 c 4 64
   cp $INIT_SCRIPT .
+  chmod +x ./init
   
   # Make usr looks like root
   cd $INITRAMFS_PATH/usr
@@ -150,5 +151,5 @@ basic_root
 downtract_alpine
 alp_manage_apk
 #extract_blobs
-install_scripts
+#install_scripts
 compile_cpio

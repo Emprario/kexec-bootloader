@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 
@@ -11,23 +11,23 @@ mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t devtmpfs  devtmpfs /dev
 
-source /lib/initscr/print.sh
-source /lib/initscr/init_functions.sh
+#. /lib/initscr/print.sh
+#. /lib/initscr/init_functions.sh
 
-setup_verbosity
+#setup_verbosity
 
 #echo "Activate external modules"
 #cat /etc/mod.cfg | sh
 
-infop "Ready to prepare new root !"
+echo "Ready to jump into new kernel !"
 
 # Return $INIT $ROOT $MOUNT_OPT
-parse_cmdline
-mount_root
+#parse_cmdline
+#mount_root
 if $DEVMODE;then
   bash
 fi
-exec switch_root /mnt/root $INIT
+#exec switch_root /mnt/root $INIT
 
 # Fallback to bash
-#/bin/bash
+/bin/bash
