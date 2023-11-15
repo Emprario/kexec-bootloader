@@ -12,8 +12,12 @@ CONFIG_VERSION="$KVERSION.$AREV-$CREV"
 REMOTE_KERNEL="https://github.com/archlinux/linux/archive/refs/tags/v$KERNEL_VERSION.tar.gz"
 REMOTE_CONFIG="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/$CONFIG_VERSION/config"
 
+BUILDROOT_VERSION="2023.08.3"
+REMOTE_BUILDROOT="https://buildroot.org/downloads/buildroot-$BUILDROOT_VERSION.tar.gz"
+BUILDROOT_PATH=$BROOT/buildroot
+
 BROOT="$PWD"
-BUILD_PATH=$BROOT/output
+OUTPATH=$BROOT/output
 SRC_LINUX=$BROOT/linux
 MODULES_FOLDER=$SRC_LINUX/modules
 
@@ -73,13 +77,15 @@ main () {
 }
 
 download () {
+  mkdir -p $OUTPATH
+  mkdir -p $BUILDROOT_PATH
+
   cd $BROOT
   
   if ! [ -d v$BVERSION  ];  then
     mkdir -p v$BVERSION
     cd v$BVERSION
     infop "Use archive directory: $BROOT/v$BVERSION"
-
 
     infop "Dowloading using curl ..."
 
@@ -94,14 +100,34 @@ download () {
     ln -s v$BVERSION/linux-$KERNEL_VERSION linux
     ln -s v$BVERSION/config-$CONFIG_VERSION config
 
-    infop "Build env sucessfully setup !"
+    infop "Build kernel env sucessfully setup !"
   else
     infop "Version already created, pass"
+  fi
+
+  if ! [ -d $BUILDROOT_PATH ]; then
+    mkdir -p $BUILDROOT_PATH
+    cd $BUILDROOT_PATH
+    infop "Use buildroot directory: $BUILDROOT_PATH"
+
+    infop "Downloading using curl ..."
+
+    curl -L $REMOTE_BUILDROOT -o buildroot-$BUILDROOT_VERSION.tar.gz || error "Cannot download buildroot : $REMOTE_BUILDROOT" 1
+
+    infop "Setting up environement ..."
+
+    tar xf buildroot-$BUILDROOT_VERSION.tar.gz
+    mv buildroot-$BUILDROOT_VERSION/* buildroot-$BUILDROOT_VERSION/.* .
+    rmdir buildroot-$BUILDROOT_VERSION
+
+    infop "Buildroot env sucessfully setup !"
+  else
+    infop "Buildroot is already downloaded, pass"
   fi
 }
 
 prepare_env () {
-  cd $BUILD_PATH
+  cd $OUTPATH
   
   infop "Prepare build environement"
   
@@ -121,9 +147,9 @@ menuconfig () {
   
   make menuconfig
   
-  diff -y --suppress-common-lines $BROOT/config .config > $BUILD_PATH/config.diff || /bin/true
+  diff -y --suppress-common-lines $BROOT/config .config > $OUTPATH/config.diff || /bin/true
   
-  infop "You can find the diff in $BUILD_PATH/config.diff"
+  infop "You can find the diff in $OUTPATH/config.diff"
 }
 
 build () {
@@ -147,16 +173,20 @@ mkinit () {
   infop "Building initramfs using : $MKINIT"
 
   if $DEV_INITRAMFS; then
-    CMDLINE="sudo bash $MKINIT $BROOT $BUILD_PATH --devapk"
+    CMDLINE="sudo bash $MKINIT $BROOT $OUTPATH --devapk"
   else
-    CMDLINE="sudo bash $MKINIT $BROOT $BUILD_PATH"
+    CMDLINE="sudo bash $MKINIT $BROOT $OUTPATH"
   fi
   
   if ! $CMDLINE; then
     error "Something went wrong with MKINIT script !" 1
   fi
   
-  cp $BUILD_PATH/initramfs.cpio.xz $SRC_LINUX
+  cp $OUTPATH/initramfs.cpio.xz $SRC_LINUX
+}
+
+mkroot () {
+
 }
 
 clean () {
@@ -166,10 +196,12 @@ clean () {
 }
 
 install_modules() {
+  mkdir -p $MODULES_FOLDER
+  
   cd $SRC_LINUX
 
   # Create empty modules folder
-  sudo rm -rf $BUILD_PATH/modules.tar.xz
+  sudo rm -rf $OUTPATH/modules.tar.xz
 
   make -j"$(nproc)" modules_install INSTALL_MOD_PATH=$MODULES_FOLDER INSTALL_MOD_STRIP=1
 
@@ -179,15 +211,15 @@ install_modules() {
   rm -rf */source
 
   # Create an archive for the modules
-  tar -cv --use-compress-program="xz -9 -T0" -f $BUILD_PATH/modules.tar.xz *
+  tar -cv --use-compress-program="xz -9 -T0" -f $OUTPATH/modules.tar.xz *
   infop "Modules archive created."
 
 }
 
 post () {
-  cp $SRC_LINUX/arch/x86/boot/bzImage $BUILD_PATH
+  cp $SRC_LINUX/arch/x86/boot/bzImage $OUTPATH
   export -n BROOT
-  export -n BUILD_PATH
+  export -n OUTPATH
 }
 
 TARGET=""

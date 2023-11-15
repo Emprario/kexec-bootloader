@@ -31,3 +31,4 @@ fi
 
 # Fallback to bash
 /bin/bash
+exec /sbin/init
