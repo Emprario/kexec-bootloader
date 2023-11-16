@@ -2,6 +2,9 @@
 
 set -e
 
+BROOT="$PWD"
+OUTPATH=$BROOT/output
+
 KVERSION="6.4.9"
 AREV="arch1"
 CREV="1"
@@ -12,20 +15,18 @@ CONFIG_VERSION="$KVERSION.$AREV-$CREV"
 REMOTE_KERNEL="https://github.com/archlinux/linux/archive/refs/tags/v$KERNEL_VERSION.tar.gz"
 REMOTE_CONFIG="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/$CONFIG_VERSION/config"
 
+SRC_LINUX=$BROOT/linux
+MODULES_FOLDER=$SRC_LINUX/modules
+
 BUILDROOT_VERSION="2023.08.3"
 REMOTE_BUILDROOT="https://buildroot.org/downloads/buildroot-$BUILDROOT_VERSION.tar.gz"
 BUILDROOT_PATH=$BROOT/buildroot
-
-BROOT="$PWD"
-OUTPATH=$BROOT/output
-SRC_LINUX=$BROOT/linux
-MODULES_FOLDER=$SRC_LINUX/modules
 
 
 #TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
 
 
-TARGETs=("kaboot" "chgconfig" "clean") 
+TARGETs=("kaboot" "config_linux" "config_br" "clean") 
 
 source functions.sh
 
@@ -78,7 +79,6 @@ main () {
 
 download () {
   mkdir -p $OUTPATH
-  mkdir -p $BUILDROOT_PATH
 
   cd $BROOT
   
@@ -117,7 +117,7 @@ download () {
     infop "Setting up environement ..."
 
     tar xf buildroot-$BUILDROOT_VERSION.tar.gz
-    mv buildroot-$BUILDROOT_VERSION/* buildroot-$BUILDROOT_VERSION/.* .
+    mv buildroot-$BUILDROOT_VERSION/* buildroot-$BUILDROOT_VERSION/.* . 2>/dev/null
     rmdir buildroot-$BUILDROOT_VERSION
 
     infop "Buildroot env sucessfully setup !"
@@ -186,7 +186,7 @@ mkinit () {
 }
 
 mkroot () {
-
+  echo "Building a rootfs"
 }
 
 clean () {
