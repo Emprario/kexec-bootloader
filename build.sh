@@ -76,8 +76,9 @@ main () {
     install_modules
   fi
 
-  mkinit
-  
+  #mkinit
+  mkroot
+
   build
 }
 
@@ -223,7 +224,21 @@ mkinit () {
 
 mkroot () {
   cd $BUILDROOT_PATH
-  echo "Building a rootfs"
+  
+  infop "Building a rootfs"
+
+  if ! make -j8; then
+    error "Error while compiling buildroot" 1
+  fi
+
+  mkdir output/images/rootfs
+  cd output/images/rootfs
+  tar x ../rootfs.tar -C .
+  
+  rm -f ../initramfs.cpio.xz
+  find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > ../initramfs.cpio.xz
+  
+  cp ../initramfs.cpio.xz $SRC_LINUX
 }
 
 clean () {
@@ -269,6 +284,16 @@ ONCE=false
 DEV_INITRAMFS=false
 CONFIG=false
 CLEAN=false
+
+space=false
+for path in $PATH; do
+  if ! $space; then
+    space=true
+  else
+    error "Spaces find in PATH !" 1
+  fi
+done
+
 
 for arg in $@
 do
