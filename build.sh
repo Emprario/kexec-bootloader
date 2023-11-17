@@ -26,7 +26,7 @@ BUILDROOT_PATH=$BROOT/buildroot
 #TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
 
 
-TARGETs=("kaboot" "config" "clean") 
+TARGETs=("kaboot" "empty") 
 
 source functions.sh
 
@@ -36,6 +36,8 @@ usage () {
   echo "  -h | --help       Print help"
   echo "  -p | --print-var  Print input variables"
   echo "  --once            Build the kernel only once (not twice as default)"
+  echo "  --config          Config the kernel and buildroot with the specified target"
+  echo "  --clean           Clean build environement"
   #echo "  --dev-initramfs   Build the initramfs with dev apks"
   echo 
   #echo "    BVERSION is a variable that is overwritten the default ($BVERSION) if specifed."
@@ -59,12 +61,12 @@ main () {
   
   prepare_env
   
-  if [[ $TARGET == "chgconfig" ]];then
+  if $CONFIG;then
     menuconfig
     exit 0
   fi
   
-  if [[ $TARGET == "clean" ]];then
+  if $CLEAN;then
     clean
     exit 0
   fi
@@ -73,7 +75,9 @@ main () {
     build
     install_modules
   fi
+
   mkinit
+  
   build
 }
 
@@ -226,6 +230,10 @@ clean () {
   cd $SRC_LINUX
   
   make clean
+
+  cd $BUILDROOT_PATH
+
+  make clean
 }
 
 install_modules() {
@@ -259,6 +267,8 @@ TARGET=""
 PRINT_VAR=false
 ONCE=false
 DEV_INITRAMFS=false
+CONFIG=false
+CLEAN=false
 
 for arg in $@
 do
@@ -274,6 +284,12 @@ do
       ;;
     --dev-initramfs)
       DEV_INITRAMFS=true
+      ;;
+    --config)
+      CONFIG=true
+      ;;
+    --clean)
+      CLEAN=true
       ;;
     *)
       for pretend in ${TARGETs[@]}
