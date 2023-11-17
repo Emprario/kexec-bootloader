@@ -26,7 +26,7 @@ BUILDROOT_PATH=$BROOT/buildroot
 #TMPDIR=$(mktemp -d) # Accessible var in $TMPDIR
 
 
-TARGETs=("kaboot" "config_linux" "config_br" "clean") 
+TARGETs=("kaboot" "config" "clean") 
 
 source functions.sh
 
@@ -36,7 +36,7 @@ usage () {
   echo "  -h | --help       Print help"
   echo "  -p | --print-var  Print input variables"
   echo "  --once            Build the kernel only once (not twice as default)"
-  echo "  --dev-initramfs   Build the initramfs with dev apks"
+  #echo "  --dev-initramfs   Build the initramfs with dev apks"
   echo 
   #echo "    BVERSION is a variable that is overwritten the default ($BVERSION) if specifed."
   echo "    TARGET [required] is a keyword to specified what you want to build ;"
@@ -131,25 +131,57 @@ prepare_env () {
   
   infop "Prepare build environement"
   
-  cp $BROOT/config config.appended
+  cp $BROOT/config config-linux.appended
   
-  if ! [ -f $BROOT/overlays/$TARGET/no_overlay.conf ]; then
-    cat $BROOT/overlays/$TARGET/*.conf >> config.appended
+  if ! [ -f $BROOT/overlays/linux/$TARGET/no_overlay.conf ]; then
+    cat $BROOT/overlays/linux/$TARGET/*.conf >> config-linux.appended
   fi
   
-  cp config.appended $SRC_LINUX/.config
+  cp config-linux.appended $SRC_LINUX/.config
+
+  # Preparing buildroot
+
+  cd $BUILDROOT_PATH
+  make defconfig
+  cd $OUTPATH
+
+  cp $BUILDROOT_PATH/.config config-buildroot.appended
+  
+  if ! [ -f $BROOT/overlays/buildroot/$TARGET/no_overlay.conf ]; then
+    cat $BROOT/overlays/buildroot/$TARGET/*.conf >> config-buildroot.appended
+  fi
+  
+  cp config-buildroot.appended $BUILDROOT_PATH/.config
+
+  infop "All configs generated !"
 }
 
 menuconfig () {
   cd $SRC_LINUX
   
-  infop "Change configuration"
+  infop "Change configuration of linux ..."
   
   make menuconfig
   
-  diff -y --suppress-common-lines $BROOT/config .config > $OUTPATH/config.diff || /bin/true
+  diff -y --suppress-common-lines $BROOT/config .config > $OUTPATH/config-linux.diff || /bin/true
   
-  infop "You can find the diff in $OUTPATH/config.diff"
+  infop "You can find the linux diff in $OUTPATH/config-linux.diff"
+
+  cd $BUILDROOT_PATH
+  
+  infop "Change configuration of buildroot ..."
+  
+  make menuconfig
+
+  cp .config config_br_tmp
+
+  make defconfig
+  
+  diff -y --suppress-common-lines .config config_br_tmp > $OUTPATH/config-buildroot.diff || /bin/true
+
+  rm config_br_tmp
+  
+  infop "You can find the buildroot diff in $OUTPATH/config-buildroot.diff"
 }
 
 build () {
@@ -186,6 +218,7 @@ mkinit () {
 }
 
 mkroot () {
+  cd $BUILDROOT_PATH
   echo "Building a rootfs"
 }
 
