@@ -18,8 +18,7 @@ REMOTE_CONFIG="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-
 SRC_LINUX=$BROOT/linux
 MODULES_FOLDER=$SRC_LINUX/modules
 
-BUILDROOT_VERSION="2023.08.3"
-REMOTE_BUILDROOT="https://buildroot.org/downloads/buildroot-$BUILDROOT_VERSION.tar.gz"
+REMOTE_BUILDROOT="https://gitlab.com/buildroot.org/buildroot.git"
 BUILDROOT_PATH=$BROOT/buildroot
 
 
@@ -115,20 +114,17 @@ download () {
     cd $BUILDROOT_PATH
     infop "Use buildroot directory: $BUILDROOT_PATH"
 
-    infop "Downloading using curl ..."
+    infop "Downloading using git ..."
 
-    curl -L $REMOTE_BUILDROOT -o buildroot-$BUILDROOT_VERSION.tar.gz || error "Cannot download buildroot : $REMOTE_BUILDROOT" 1
+    git clone $REMOTE_BUILDROOT . || error "Cannot download buildroot : $REMOTE_BUILDROOT" 1
 
-    infop "Setting up environement ..."
-
-    tar xf buildroot-$BUILDROOT_VERSION.tar.gz
-    mv buildroot-$BUILDROOT_VERSION/* buildroot-$BUILDROOT_VERSION/.* . 2>/dev/null
-    rmdir buildroot-$BUILDROOT_VERSION
-
-    infop "Buildroot env sucessfully setup !"
   else
-    infop "Buildroot is already downloaded, pass"
+    infop "Buildroot is already downloaded, doing a git pull"
+    cd $BUILDROOT_PATH
+    git pull
   fi
+
+  infop "Buildroot env sucessfully setup !"
 }
 
 prepare_env () {
@@ -231,14 +227,14 @@ mkroot () {
     error "Error while compiling buildroot" 1
   fi
 
-  mkdir output/images/rootfs
-  cd output/images/rootfs
-  tar x ../rootfs.tar -C .
+  #mkdir output/images/rootfs
+  #cd output/images/rootfs
+  #tar xf ../rootfs.tar -C .
   
-  rm -f ../initramfs.cpio.xz
-  find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > ../initramfs.cpio.xz
+  #rm -f ../initramfs.cpio.xz
+  #find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > ../initramfs.cpio.xz
   
-  cp ../initramfs.cpio.xz $SRC_LINUX
+  cp output/images/rootfs.cpio.xz $SRC_LINUX/initramfs.cpio.xz
 }
 
 clean () {
