@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Exec the /lib/kaboot/main.sh
+
+exec /lib/kaboot/main.sh
+
+exit 0
