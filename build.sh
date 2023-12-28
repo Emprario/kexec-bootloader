@@ -235,6 +235,10 @@ mkroot () {
   #find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > ../initramfs.cpio.xz
   
   cp output/images/rootfs.cpio.xz $SRC_LINUX/initramfs.cpio.xz
+  rm -rf $OUTPATH/rootfs
+  mkdir $OUTPATH/rootfs
+  cd $OUTPATH/rootfs
+  cpio -idv < $BUILDROOT_PATH/output/images/rootfs.cpio
 }
 
 clean () {
