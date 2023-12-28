@@ -59,7 +59,7 @@ main() {
   grub_cfg_load
   grub_default_load
   [[ 1 = $showmenu ]] && menu_show
-  kexec_load
+  #kexec_load
 }
 
 grub_root_probe() {
@@ -159,13 +159,14 @@ menu_show() {
     wmenu+=("$index" "${MENUENTRY[$index]}")
   done
 
-  SELECTED=$(whiptail \
-  --title 'KEXEC GRUB helper' \
-  --menu 'Select a GRUB entry' \
-  --notags \
-  --default-item "$SELECTED" \
-  25 85 16 -- \
-  "${wmenu[@]}" 3>&1 1>&2 2>&3)
+  #SELECTED=$(whiptail \
+  #--title 'KEXEC GRUB helper' \
+  #--menu 'Select a GRUB entry' \
+  #--notags \
+  #--default-item "$SELECTED" \
+  #25 85 16 -- \
+  #"${wmenu[@]}" 3>&1 1>&2 2>&3)
+  echo "${wmenu[@]}"
 }
 
 kexec_load() {
@@ -189,7 +190,7 @@ kexec_load() {
   printf 'initrd  %s\n' "$initrd"
   printf 'cmdline %s\n' "$append"
 
-  /sbin/kexec "${kexec_args[@]}"
+  echo "/sbin/kexec ${kexec_args[@]}"
 
   echo
   echo 'Ready to boot new kernel using "systemctl kexec"'
