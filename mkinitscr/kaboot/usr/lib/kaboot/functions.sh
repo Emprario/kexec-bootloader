@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 infop () { # status update
   printf "\e[34m$1\e[0m \n"

@@ -68,5 +68,3 @@ scan_loader () {
 scan_entries () {
   echo "$(ls ./loader/entries/*.conf)"
 }
-
-scan_loader
