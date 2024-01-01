@@ -18,39 +18,37 @@ GRUBINDEX=()
 SELECTED=0
 
 main() {
-  local args=$(getopt -o v -l version -l grub -l mnt: -- "$@")
-  [ $? != 0 ] && exit 2
-  eval set -- $args
+  #local args=$(getopt -o v -l version -l grub -l mnt -- "$@")
+  #[ $? != 0 ] && exit 2
+  #eval set -- $args
 
-  while true; do
-    case "$1" in
+  FILL=null
+  for arg in $@;do
+    case "$arg" in
     '--version'|'-v')
       echo "$PROGNAME version $PROGVERSION"
       exit 0
       ;;
     '--grub')
-      shift
-      GRUBROOT="$1"
+      FILL=GRUBROOT
       continue
       ;;
     '--mnt')
-      shift
-      ROOT="$1"
+      FILL=ROOT
       continue
       ;;
-    '--')
-      shift
-      break
-      ;;
-    *)
-      echo 'Internal error!' >&2
-      exit 1
     esac
-    shift
+    if [ $arg != "--grub" ] && [ $arg != "--mnt" ] && ( [ $FILL = "GRUBROOT" ] || [ $FILL = "ROOT" ] );then
+      export $FILL="$arg"
+    else
+      echo "Syntax: kexec-load-grub [-v] [--mnt MOINTPOINT]--grub GRUBROOT"
+      exit 1
+    fi
   done
 
+
   if [[ -z $ROOT ]]; then
-    ROOT=/
+    ROOT=""
   fi
 
   if [[ -z $GRUBROOT ]]; then
