@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 if [ -d "/lib/kaboot/" ];then
@@ -20,3 +20,5 @@ fi
 #  OPTIONS_useNAME="$(echo $option | cut -f4 -d"/")_on_/dev/$(echo $option | cut -f3 -d"/") $OPTIONS_useNAME"
 #done
 #selection "Selection:" "$OPTIONS_useNAME"
+
+$srcPATH/kexec-load-grub --grub /mnt/boot/grub --mnt /mnt

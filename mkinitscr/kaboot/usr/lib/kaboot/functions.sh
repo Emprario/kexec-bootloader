@@ -18,8 +18,3 @@ error () { # critical error -> script will exit
     exit $2
   fi
 }
-
-underscores() {
-  # Convert underscores to spaces
-  echo $1 | tr '_' ' '
-}

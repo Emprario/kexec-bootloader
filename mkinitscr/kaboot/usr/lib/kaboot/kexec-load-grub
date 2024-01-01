@@ -2,11 +2,12 @@
 
 set -eu
 
-PROGNAME=${0##*/}
-PROGVERSION="1.0"
+PROGNAME="kexec-load-grub"
+PROGVERSION="1.1"
 
 GRUBDATA=""
 GRUBROOT=""
+BOOTROOT=""
 GRUBPREFIX=""
 MENUENTRY=()
 INITRDS=()
@@ -17,9 +18,7 @@ GRUBINDEX=()
 SELECTED=0
 
 main() {
-  local showmenu=1
-
-  local args=$(getopt -o v -l version,root:,auto -n "$PROGNAME" -- "$@")
+  local args=$(getopt -o v -l version -l grub -l mnt: -- "$@")
   [ $? != 0 ] && exit 2
   eval set -- $args
 
@@ -29,14 +28,14 @@ main() {
       echo "$PROGNAME version $PROGVERSION"
       exit 0
       ;;
-    '--root')
-      GRUBROOT="$2"
-      shift 2
+    '--grub')
+      shift
+      GRUBROOT="$1"
       continue
       ;;
-    '--auto')
-      showmenu=0
+    '--mnt')
       shift
+      ROOT="$1"
       continue
       ;;
     '--')
@@ -47,10 +46,16 @@ main() {
       echo 'Internal error!' >&2
       exit 1
     esac
+    shift
   done
 
+  if [[ -z $ROOT ]]; then
+    ROOT=/
+  fi
+
   if [[ -z $GRUBROOT ]]; then
-    GRUBROOT=$(grub_root_probe)
+    echo "No Grub root provided exit ..."
+    exit 1
   fi
 
   mountpoint -q /boot && GRUBPREFIX=/boot || GRUBPREFIX=
@@ -58,23 +63,8 @@ main() {
 
   grub_cfg_load
   grub_default_load
-  [[ 1 = $showmenu ]] && menu_show
-  #kexec_load
-}
-
-grub_root_probe() {
-  # Debian and friends
-  if [[ -f /boot/grub/grub.cfg ]]; then
-    echo "/boot/grub"
-  # RHEL and friends
-  elif [[ -f /boot/efi/EFI/redhat/grub.cfg ]]; then
-    echo "/boot/efi/EFI/redhat"
-  elif [[ -f /boot/grub2/grub.cfg ]]; then
-    echo "/boot/grub2"
-  else
-    echo "No grub.cfg could be located." 1>&2
-    exit 1
-  fi
+  menu_show
+  kexec_load
 }
 
 grub_cfg_load() {
@@ -167,11 +157,14 @@ menu_show() {
   #25 85 16 -- \
   #"${wmenu[@]}" 3>&1 1>&2 2>&3)
   echo "${wmenu[@]}"
+  TABLE=${wmenu[@]}
+  menu
+  SELECTED=$sel
 }
 
 kexec_load() {
-  local kernel_image="${KERNELS[$SELECTED]}"
-  local initrd="${INITRDS[$SELECTED]}"
+  local kernel_image="${ROOT}/${KERNELS[$SELECTED]}"
+  local initrd="${ROOT}/${INITRDS[$SELECTED]}"
   local append="${KARGS[$SELECTED]}"
   test -z "$append" && append="$(cat /proc/cmdline)"
 
@@ -190,7 +183,7 @@ kexec_load() {
   printf 'initrd  %s\n' "$initrd"
   printf 'cmdline %s\n' "$append"
 
-  echo "/sbin/kexec ${kexec_args[@]}"
+  /sbin/kexec ${kexec_args[@]}
 
   echo
   echo 'Ready to boot new kernel using "systemctl kexec"'

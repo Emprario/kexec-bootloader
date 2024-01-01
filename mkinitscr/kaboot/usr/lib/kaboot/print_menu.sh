@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+HEADER="Kaboot grub selection ..."
+TABLE=()
 
 readkey () {
   # Read a single character from the keyboard
@@ -20,24 +23,23 @@ readkey () {
 }
 
 menu () {
-  HEADER=$1
-  OPTS="$*"
-
-  tmp=''
-  sel=1
+  sel=0
   OP=' '
   while [ "$OP" != "ENTER" ];do
-    echo $(underscores $HEADER)
+    echo $HEADER
     cc=0
-    for arg in $OPTS;do
-      if [ $cc -ne 0 ];then
+    for arg in ${TABLE[@]};do
+    #echo "arg='$arg'"
+      if [[ $arg =~ ^[0-9]+$ ]];then
         if [ $sel -eq $cc ];then
-          echo "  * $(underscores $arg)"
+          printf "\n  * ${arg}."
         else
-          echo "    $(underscores $arg)"
+          printf "\n    ${arg}."
         fi
+        cc=$((cc+1))
+      else
+        printf " ${arg}"
       fi
-      cc=$((cc+1))
     done
     OP=$(readkey)
     if [ "$OP" = "DOWN" ];then
@@ -47,14 +49,10 @@ menu () {
       fi
     elif [ "$OP" = "UP" ];then
       sel=$((sel-1))
-      if [ $sel -lt 1 ];then
-        sel=1
+      if [ $sel -lt 0 ];then
+        sel=0
       fi
     fi
     clear
-    #echo "cc=$cc sel=$sel OP=$OP"
   done
 }
-
-#. ./functions.sh
-#menu Welcome_to_my_custom_menu opta opt_b opt__c
