@@ -75,7 +75,6 @@ main () {
     install_modules
   fi
 
-  #mkinit
   mkroot
 
   build
@@ -198,26 +197,6 @@ build () {
   infop "Kernel $KERNEL_STRING sucessfully built !"
 }
 
-mkinit () {
-  cd $BROOT/mkinitscr/$TARGET
-  
-  MKINIT=$BROOT/mkinitscr/$TARGET/mkinitramfs.sh
-  
-  infop "Building initramfs using : $MKINIT"
-
-  if $DEV_INITRAMFS; then
-    CMDLINE="sudo bash $MKINIT $BROOT $OUTPATH --devapk"
-  else
-    CMDLINE="sudo bash $MKINIT $BROOT $OUTPATH"
-  fi
-  
-  if ! $CMDLINE; then
-    error "Something went wrong with MKINIT script !" 1
-  fi
-  
-  cp $OUTPATH/initramfs.cpio.xz $SRC_LINUX
-}
-
 mkroot () {
   cd $BUILDROOT_PATH
   
@@ -227,22 +206,9 @@ mkroot () {
     error "Error while compiling buildroot" 1
   fi
 
-  #mkdir output/images/rootfs
-  #cd output/images/rootfs
-  #tar xf ../rootfs.tar -C .
-  
-  #rm -f ../initramfs.cpio.xz
-  #find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > ../initramfs.cpio.xz
-  
-  # cp output/images/rootfs.cpio.xz $SRC_LINUX/initramfs.cpio.xz
-  
-  rm -rf $OUTPATH/rootfs
-  mkdir $OUTPATH/rootfs
-  cd $OUTPATH/rootfs
-  cpio -idv < $BUILDROOT_PATH/output/images/rootfs.cpio
+  sudo bash $BROOT/mkinitramfs.sh "$BROOT" "$OUTPATH" "$TARGET" "$BUILDROOT_PATH"
+  cp $OUTPATH/initramfs.cpio.xz $SRC_LINUX
 
-  cp -a $BROOT/mkinitscr/$TARGET/* $OUTPATH/rootfs
-  find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > $SRC_LINUX/initramfs.cpio.xz
 }
 
 clean () {
