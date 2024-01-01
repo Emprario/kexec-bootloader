@@ -241,6 +241,9 @@ mkroot () {
   cd $OUTPATH/rootfs
   cpio -idv < $BUILDROOT_PATH/output/images/rootfs.cpio
 
+  sudo mknod -m 622 dev/console c 5 1
+  sudo mknod -m 622 dev/tty0 c 4 1
+  sudo mknod -m 622 dev/ttyS0 c 4 64
   cp -a $BROOT/mkinitscr/$TARGET/* $OUTPATH/rootfs
   find .  | cpio -ov --format=newc | xz --check=crc32 --lzma2=dict=512KiB -ze -9 -T$(nproc) > $SRC_LINUX/initramfs.cpio.xz
 }
