@@ -8,7 +8,6 @@ PROGVERSION="1.1"
 GRUBDATA=""
 GRUBROOT=""
 BOOTROOT=""
-GRUBPREFIX=""
 MENUENTRY=()
 INITRDS=()
 KERNELS=()
@@ -18,46 +17,7 @@ GRUBINDEX=()
 SELECTED=0
 
 main() {
-  #local args=$(getopt -o v -l version -l grub -l mnt -- "$@")
-  #[ $? != 0 ] && exit 2
-  #eval set -- $args
-
-  FILL=null
-  for arg in $@;do
-    case "$arg" in
-    '--version'|'-v')
-      echo "$PROGNAME version $PROGVERSION"
-      exit 0
-      ;;
-    '--grub')
-      FILL=GRUBROOT
-      continue
-      ;;
-    '--mnt')
-      FILL=ROOT
-      continue
-      ;;
-    esac
-    if [ $arg != "--grub" ] && [ $arg != "--mnt" ] && ( [ $FILL = "GRUBROOT" ] || [ $FILL = "ROOT" ] );then
-      export $FILL="$arg"
-    else
-      echo "Syntax: kexec-load-grub [-v] [--mnt MOINTPOINT]--grub GRUBROOT"
-      exit 1
-    fi
-  done
-
-
-  if [[ -z $ROOT ]]; then
-    ROOT=""
-  fi
-
-  if [[ -z $GRUBROOT ]]; then
-    echo "No Grub root provided exit ..."
-    exit 1
-  fi
-
-  mountpoint -q /boot && GRUBPREFIX=/boot || GRUBPREFIX=
-  GRUBDATA=$(< "$GRUBROOT/grub.cfg")
+  GRUBDATA=$(< "$ROOT/$GRUBROOT/grub.cfg")
 
   grub_cfg_load
   grub_default_load
@@ -93,7 +53,7 @@ grub_default_load() {
   # Find the default
   local entry=$(echo "$GRUBDATA" | awk '/set default/ {print $2}' | cut -d'"' -f2 | tail -1)
   if [[ "$entry" = '${saved_entry}' ]]; then
-    entry=$(sed -ne 's/^saved_entry=//p' "$GRUBROOT/grubenv")
+    entry=$(sed -ne 's/^saved_entry=//p' "$ROOT/$GRUBROOT/grubenv")
   fi
   if [[ -z "$entry" ]]; then
     entry=0
@@ -129,12 +89,12 @@ grub_parse_entry() {
       ;;
     'linux'|'linux16'|'linuxefi')
       while read image append; do
-        entry_kernel_image="${GRUBPREFIX}$image"
+        entry_kernel_image="$image"
         entry_append="$append"
       done <<< "$args"
       ;;
     'initrd'|'initrd16'|'initrdefi')
-      entry_initrd="${GRUBPREFIX}$args"
+      entry_initrd="$args"
       ;;
     esac
   done <<< "$data"
@@ -186,5 +146,3 @@ kexec_load() {
   echo
   echo 'Ready to boot new kernel using "systemctl kexec"'
 }
-
-main "$@"
