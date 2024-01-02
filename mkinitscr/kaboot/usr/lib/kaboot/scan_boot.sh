@@ -31,7 +31,7 @@ get_scan () {
   echo "Options detected: $ENTRIES"
 }
 
-scan_loader () {
+scan_loader_systemd () {
   for key in TIMEOUT DEFAULT EDITOR;do
     if [ -n "$(export | grep $key)" ];then
       export -n $key

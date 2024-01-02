@@ -6,8 +6,6 @@ PROGNAME="kexec-load-grub"
 PROGVERSION="1.1"
 
 GRUBDATA=""
-GRUBROOT=""
-BOOTROOT=""
 MENUENTRY=()
 INITRDS=()
 KERNELS=()
@@ -121,8 +119,8 @@ menu_show() {
 }
 
 kexec_load() {
-  local kernel_image="${ROOT}/${KERNELS[$SELECTED]}"
-  local initrd="${ROOT}/${INITRDS[$SELECTED]}"
+  local kernel_image="${ROOT}${KERNELS[$SELECTED]}"
+  local initrd="${ROOT}${INITRDS[$SELECTED]}"
   local append="${KARGS[$SELECTED]}"
   test -z "$append" && append="$(cat /proc/cmdline)"
 
