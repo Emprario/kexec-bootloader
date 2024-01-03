@@ -16,7 +16,6 @@ parse_cmdline
 
 mount_root
 find_grub_cfg
-umount_root
 
 ROOT=/mnt
 GRUBROOT=${grub_cfg%/*}
@@ -24,3 +23,4 @@ GRUBROOT=${grub_cfg%/*}
 . $srcPATH/kexec-load-grub
 
 main "$@"
+umount_root
