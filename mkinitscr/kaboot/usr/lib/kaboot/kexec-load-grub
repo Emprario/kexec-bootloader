@@ -133,7 +133,7 @@ kexec_load() {
 
   local kexec_args=('-l' "$kernel_image")
   [[ -z "$initrd" ]] || kexec_args+=("--initrd=$initrd")
-  [[ -z "$append" ]] || kexec_args+=("--append=$append")
+  [[ -z "$append" ]] || kexec_args+=("--append=\"$append\"")
 
   printf 'kernel  %s\n' "$kernel_image"
   printf 'initrd  %s\n' "$initrd"
@@ -142,5 +142,5 @@ kexec_load() {
   /sbin/kexec ${kexec_args[@]}
 
   echo
-  echo 'Ready to boot new kernel using "systemctl kexec"'
+  echo 'Ready to boot new kernel using "kexec -e"'
 }
