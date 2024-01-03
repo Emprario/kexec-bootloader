@@ -12,8 +12,14 @@ fi
 . $srcPATH/print_menu.sh
 . $srcPATH/scan_boot.sh
 
+parse_cmdline
+
+mount_root
+find_grub_cfg
+umount_root
+
 ROOT=/mnt
-GRUBROOT=/boot/grub
+GRUBROOT=${grub_cfg%/*}
 
 . $srcPATH/kexec-load-grub
 

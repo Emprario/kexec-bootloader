@@ -4,15 +4,6 @@ get_scan () {
   #### Find bootable drives ####
   echo "Finding bootable drives ..."
 
-  #DRIVES=$(ls /dev/disks/by-uuid)
-  #
-  ## Separate Drives lines to only keep drive name
-  #tmp=""
-  #for disk in $DRIVES; do
-  #  tmp="$tmp $(realpath $disk | cut -c6-)" # cut /dev
-  #done
-  #DRIVES="$tmp"
-
   echo "Boot partitions found: $DRIVES"
 
   #### Mount and search for kernels ####
@@ -31,40 +22,28 @@ get_scan () {
   echo "Options detected: $ENTRIES"
 }
 
-scan_loader_systemd () {
-  for key in TIMEOUT DEFAULT EDITOR;do
-    if [ -n "$(export | grep $key)" ];then
-      export -n $key
-    fi
-  done
-
-  LOADER=$(cat ./loader/loader.conf)
-  iskey=true
-  next=undefined
-  for word in $LOADER;do
-    echo "LINE='$word' ISKEY='$iskey' NEXT='$next'"
-    if $iskey;then
-      iskey=false
-      if [ "$word" = "default" ];then
-        next=DEFAULT
-      elif [ "$word" = "timeout" ];then
-        next=TIMEOUT
-      elif [ "$word" = "editor" ];then
-        next=EDITOR
-      else
-        next=undefined
-        iskey=true
-      fi
-    elif ! $iskey && [ "$next" != "undefined" ];then
-      echo "exporting ..."
-      export $next=$word
-      next=undefined
-      iskey=true
-    fi
-  done
-  echo "DEFAULT=$DEFAULT TIMEOUT=$TIMEOUT EDITOR=$EDITOR"
+mount_root () {
+  mkdir -p /mnt
+  mount -o ro,noexec "$target_root" /mnt
 }
 
-scan_entries () {
-  echo "$(ls ./loader/entries/*.conf)"
+umount_root () {
+  umount /mnt
+}
+
+find_grub_cfg () {
+  cd /mnt
+  FIND_PRIORITY=("./boot/grub/" "./boot/" "./grub/" "./efi/" "./BOOT/" "./GRUB")
+  for dir in ${FIND_PRIORITY[@]};do
+    CFG=$(find $dir | grep "grub.cfg")
+    if [ -f $CFG ];then
+      break
+    fi
+  done
+  if [ -z $CFG ];then
+    echo "Wasn't able to extract grub.cfg from current root"
+    export grub_cfg=""
+  else
+    export grub_cfg=$CFG
+  fi
 }
