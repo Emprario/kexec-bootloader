@@ -20,6 +20,7 @@ main() {
   grub_cfg_load
   grub_default_load
   menu_show
+  split_append
   kexec_load
 }
 
@@ -45,6 +46,23 @@ grub_cfg_load() {
       menuindex=$(($menuindex + 1))
     fi
   done
+}
+
+split_append() {
+  append="${KARGS[$SELECTED]}"
+  compile=""
+  for arg in ${append[@]};do
+    if [ -z "$compile" ];then
+      if [ -n "$arg" ];then
+        compile="$arg"
+      fi
+    else
+      if [ -n "$arg" ] && [ "$arg" != " " ];then
+        compile="$compile $arg"
+      fi
+    fi
+  done
+  export append="$compile"
 }
 
 grub_default_load() {
@@ -121,8 +139,8 @@ menu_show() {
 kexec_load() {
   local kernel_image="${ROOT}${KERNELS[$SELECTED]}"
   local initrd="${ROOT}${INITRDS[$SELECTED]}"
-  local append="${KARGS[$SELECTED]}"
-  test -z "$append" && append="$(cat /proc/cmdline)"
+  #local append="${KARGS[$SELECTED]}"
+  #test -z "$append" && append="$(cat /proc/cmdline)"
 
   printf 'Selected "%s"\n\n' "${MENUENTRY[$SELECTED]}"
 
@@ -133,13 +151,14 @@ kexec_load() {
 
   local kexec_args=('-l' "$kernel_image")
   [[ -z "$initrd" ]] || kexec_args+=("--initrd=$initrd")
-  [[ -z "$append" ]] || kexec_args+=("--append=\"$append\"")
+  [[ -z "$append" ]] || kexec_args+=("--append=$(echo '"'$append'"')")
 
   printf 'kernel  %s\n' "$kernel_image"
   printf 'initrd  %s\n' "$initrd"
   printf 'cmdline %s\n' "$append"
 
-  /sbin/kexec ${kexec_args[@]}
+  echo "/sbin/kexec ${kexec_args[@]}"
+  /sbin/kexec "${kexec_args[@]}"
 
   echo
   echo 'Ready to boot new kernel using "kexec -e"'
