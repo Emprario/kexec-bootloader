@@ -35,9 +35,8 @@ find_grub_cfg () {
   cd /mnt
   FIND_PRIORITY=("./boot/grub/" "./boot/" "./grub/" "./efi/" "./BOOT/" "./GRUB")
   for dir in ${FIND_PRIORITY[@]};do
-    CFG=$(find $dir | grep "grub.cfg")
-    if [ -f $CFG ];then
-      break
+    if [ -f "/mnt/$dir/grub.cfg" ];then
+      CFG="$dir/grub.cfg"
     fi
   done
   if [ -z $CFG ];then
