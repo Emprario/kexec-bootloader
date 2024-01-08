@@ -151,7 +151,7 @@ kexec_load() {
 
   local kexec_args=('-l' "$kernel_image")
   [[ -z "$initrd" ]] || kexec_args+=("--initrd=$initrd")
-  [[ -z "$append" ]] || kexec_args+=("--append=$(echo '"'$append'"')")
+  [[ -z "$append" ]] || kexec_args+=("--command-line=$append")
 
   printf 'kernel  %s\n' "$kernel_image"
   printf 'initrd  %s\n' "$initrd"
