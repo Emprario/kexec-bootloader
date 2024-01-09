@@ -179,7 +179,7 @@ menuconfig () {
   
   diff -y --suppress-common-lines .config config_br_tmp > $OUTPATH/config-buildroot.diff || /bin/true
 
-  rm config_br_tmp
+  mv config_br_tmp $OUTPATH/config-buildroot.mod
   
   infop "You can find the buildroot diff in $OUTPATH/config-buildroot.diff"
 }
