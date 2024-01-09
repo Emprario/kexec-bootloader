@@ -24,7 +24,18 @@ get_scan () {
 
 mount_root () {
   mkdir -p /mnt
-  mount -o ro,noexec "$target_root" /mnt
+  # Waiting for device creation
+  while true;do
+    if [ -b "${target_root}" ]; then
+      echo "Device created";            
+        break;       
+    else                          
+      echo "Waiting for device";        
+        sleep 1;     
+    fi                                
+  done
+  NFSTYPE=($(lsblk -r -o NAME,FSTYPE | grep ${target_root##*/}))
+  mount -t ${NFSTYPE[1]} -o ro,noexec "$target_root" /mnt
 }
 
 umount_root () {

@@ -24,4 +24,4 @@ GRUBROOT=${grub_cfg%/*}
 
 main "$@"
 umount_root
-kexec -e
+reboot
