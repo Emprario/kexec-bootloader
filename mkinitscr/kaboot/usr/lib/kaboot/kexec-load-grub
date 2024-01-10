@@ -19,6 +19,7 @@ main() {
 
   grub_cfg_load
   grub_default_load
+  clear
   menu_show
   split_append
   kexec_load

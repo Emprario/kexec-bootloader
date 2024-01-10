@@ -31,11 +31,6 @@ null::sysinit:/bin/ln -sf /proc/self/fd/2 /dev/stderr
 # Run kaboot
 ::sysinit:/bin/bash /lib/kaboot/main.sh
 
-::sysinit:/etc/init.d/rcK
-::sysinit:/sbin/swapoff -a
-::sysinit:/bin/umount -a -r
-::sysinit:kexec -e
-
 # Put a getty on the serial port
 console::respawn:/sbin/getty -L  console 0 vt100 # GENERIC_SERIAL
 
